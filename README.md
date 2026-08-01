@@ -59,18 +59,25 @@ Reporting → 最終成果物（OSCP品質）
 
 ```
 CTF-Boot2Root/
- ├ Writeups/              # 実戦ログ（Boot2Root攻略）
- │   ├ MachineA.md
- │   ├ MachineB.md
+ ├ Writeups/
+ │   ├ Vuln-MachineA/
+ │   │   ├ README.md
+ │   │   └ images/
+ │   │       ├ 01-nmap.png
+ │   │       ├ 02-web-login.png
+ │   │       ├ 03-shell.png
+ │   │       └ 04-root.png
+ │   ├ HTB-MachineA/
+ │   │   ├ README.md
+ │   │   └ images/
  │   └ _Writeup-Template.md
  │
- ├ Reports/               # OSCP形式のレポート
- │   ├ MachineA-Report.md
- │   ├ MachineB-Report.md
+ ├ Reports/
+ │   ├ VulnHub-potato-Report.md
+ │   ├ HTB-MachineA-Report.md
  │   └ _Report-Template.md
  │
- │
- └ README.md              # このトップページ
+ └ README.md
 ```
 
 ---
