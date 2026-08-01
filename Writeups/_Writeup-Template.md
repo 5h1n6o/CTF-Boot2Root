@@ -1,4 +1,5 @@
-# 🏆 Boot2Root Writeup Template（Pentest-Playbook 連携版）
+# 🏆 # Boot2Root - MachineName  
+（HackTheBox / VulnHub / TryHackMe）
 
 Boot2Root は「実戦ログ」、  
 Pentest-Playbook は「詳細技術体系」という役割分担で記録します。
@@ -10,10 +11,11 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 
 ## 0. Target Information
 
-- Target IP: `10.10.x.x`
+- Target IP:  `10.10.x.x`
 - OS: Unknown（後で判明）
 - Difficulty: Easy / Medium / Hard
 - Tags: Web / SMB / FTP / SSH / PrivEsc / Pivot / Tunneling / Linux / Windows
+- Notes:  
 
 ---
 
@@ -226,27 +228,27 @@ Boot2Root の攻略結果を一覧化します。
 
 Pentest-Playbook の Reporting 章の構造に合わせて記述します。
 
-##### F-01: SQL Injection（High）
+#### F-01: SQL Injection（High）
 
-###### ✔ 再現手順
+##### ✔ 再現手順
 ```
 ' OR 1=1 --
 ```
 
-###### ✔ 証拠（Screenshots）
+##### ✔ 証拠（Screenshots）
 （スクショを貼る）
 
-###### ✔ 影響範囲
+##### ✔ 影響範囲
 - 認証バイパス  
 - DB ダンプ  
 
-###### ✔ 改善策
+##### ✔ 改善策
 - Prepared Statement  
 - WAF  
 
 ---
 
-#### 6. Attack Path（攻撃経路）
+### 6. Attack Path（攻撃経路）
 
 Boot2Root の実戦ログを Pentest-Playbook の Kill Chain に沿って整理します。
 
@@ -274,7 +276,7 @@ Root 取得
 
 ---
 
-#### 7. Evidence（証拠）
+### 7. Evidence（証拠）
 
 - コマンド結果  
 - WebShell の画面  
@@ -286,25 +288,25 @@ Root 取得
 
 ---
 
-#### 8. Recommendations（改善策）
+### 8. Recommendations（改善策）
 
 Pentest-Playbook の Reporting 章の改善策を参照しながら記述。
 
-###### ✔ システム側
+##### ✔ システム側
 - パッチ適用  
 - 不要サービス停止  
 
-###### ✔ ネットワーク側
+##### ✔ ネットワーク側
 - 内部ネットワークのセグメント化  
 - 管理系サービスの外部非公開化  
 
-###### ✔ 運用側
+##### ✔ 運用側
 - パスワードポリシー  
 - ログ監視  
 
 ---
 
-#### 9. Appendix（補足）
+### 9. Appendix（補足）
 
 - 使用ツール一覧  
 - 参考リンク  
@@ -312,7 +314,7 @@ Pentest-Playbook の Reporting 章の改善策を参照しながら記述。
 
 ---
 
-## 🎯 このテンプレートの目的
+### 🎯 このテンプレートの目的
 
 - Boot2Root の全章が Pentest-Playbook と 1:1 で連携  
 - Boot2Root は「結果」、Pentest-Playbook は「技術体系」  
