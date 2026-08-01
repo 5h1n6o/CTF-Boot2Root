@@ -1,4 +1,4 @@
-# 🏆 # Boot2Root - MachineName  
+# 🏆 Boot2Root - MachineName  
 （HackTheBox / VulnHub / TryHackMe）
 
 Boot2Root は「実戦ログ」、  
