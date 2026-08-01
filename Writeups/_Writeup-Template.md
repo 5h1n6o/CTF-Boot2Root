@@ -19,8 +19,9 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 
 ---
 
-## 1. OSINT  
-👉 詳細: [Pentest-Playbook / OSINT](../../Pentest-Playbook/OSINT/README.md)
+## 1. OSINT 
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/OSINT/README.md
+
 
 ### 実施内容（Boot2Root は結果のみ）
 - 収集したサブドメイン  
@@ -34,7 +35,8 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 2. Reconnaissance  
-👉 詳細: [Pentest-Playbook / Reconnaissance](../../Pentest-Playbook/Reconnaissance/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Reconnaissance/README.md
+
 
 ### 実施内容
 - ポートスキャン結果  
@@ -47,7 +49,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 3. Enumeration  
-👉 詳細: [Pentest-Playbook / Enumeration](../../Pentest-Playbook/Enumeration/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Enumeration/README.md
 
 ### 実施内容
 - Web / SMB / FTP / SSH の詳細調査  
@@ -61,7 +63,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 4. Initial Access  
-👉 詳細: [Pentest-Playbook / Initial-Access](../../Pentest-Playbook/Initial-Access/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Initial-Access/README.md
 
 ### 実施内容
 - SQLi / RCE / File Upload / LFI / SSRF  
@@ -74,7 +76,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 5. Local Enumeration  
-👉 詳細: [Pentest-Playbook / Local-Enumeration](../../Pentest-Playbook/Local-Enumeration/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Local-Enumeration/README.md
 
 ### 実施内容
 - whoami / id / hostname  
@@ -89,7 +91,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 6. Privilege Escalation  
-👉 詳細: [Pentest-Playbook / Privilege-Escalation](../../Pentest-Playbook/Privilege-Escalation/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Privilege-Escalation/README.md
 
 ### 実施内容
 - sudo -l  
@@ -104,7 +106,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 7. Credential Access  
-👉 詳細: [Pentest-Playbook / Credential-Access](../../Pentest-Playbook/Credential-Access/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Credential-Access/README.md
 
 ### 実施内容
 - パスワード探索  
@@ -119,7 +121,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 8. Internal Enumeration  
-👉 詳細: [Pentest-Playbook / Internal-Enumeration](../../Pentest-Playbook/Internal-Enumeration/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Internal-Enumeration/README.md
 
 ### 実施内容
 - 内部ネットワークの構造  
@@ -134,7 +136,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 9. Pivot  
-👉 詳細: [Pentest-Playbook / Pivot](../../Pentest-Playbook/Pivot/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Pivot/README.md
 
 ### 実施内容
 - SSH Local / Remote / Dynamic  
@@ -149,7 +151,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 10. Lateral Movement  
-👉 詳細: [Pentest-Playbook / Lateral-Movement](../../Pentest-Playbook/Lateral-Movement/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Lateral-Movement/README.md
 
 ### 実施内容
 - SSH 横展開  
@@ -164,7 +166,7 @@ Pentest-Playbook では **技術的背景・体系化された知識**を参照�
 ---
 
 ## 11. Reporting  
-👉 詳細: [Pentest-Playbook / Reporting](../../Pentest-Playbook/Reporting/README.md)
+👉 詳細: https://github.com/5h1n6o/Pentest-Playbook/blob/main/Reporting/README.md
 
 この章では、Boot2Root の攻略結果を  
 **Pentest-Playbook の Reporting 体系に沿ってまとめます。**
